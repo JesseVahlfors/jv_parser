@@ -1,11 +1,27 @@
+from typing import Any, Dict, Union, List
 
-def json_parser(file):
-    with open(file, "r") as f:
-        data = f.read()
-        braces_equal = data.count("{") == data.count("}")
-        quotes_equal = data.count("\"") % 2 == 0 if data.count("\"") > 0 else True
-        commas_correct = data.count(",") == data.count(":") - 1 if data.count(",") > 0 else True
-        if data:
-            if braces_equal and quotes_equal and commas_correct:
-                return eval(data)
-    return "Invalid JSON"
+JSONValue = Union[str, int, float, bool, None, 'JSONObject', 'JSONArray']
+JSONObject = Dict[str, JSONValue]
+JSONArray = List[JSONValue]
+
+
+def json_parser(token: str) -> JSONValue:
+    
+    if token == 'null':
+        return None
+    elif token == 'true':
+        return True
+    elif token == 'false':
+        return False
+    elif token.isdigit():
+        return int(token)
+    elif token.replace('.', '', 1).isdigit():
+        return float(token)
+    elif token.startswith('{') and token.endswith('}'):
+        return {}
+    elif token.startswith('[') and token.endswith(']'):
+        return []
+    else:
+        return token
+    
+    
