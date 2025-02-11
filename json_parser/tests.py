@@ -1,19 +1,23 @@
 from django.test import TestCase
-from json_parser.services.json_parser import json_parser
+from json_parser.services.json_parser import parse
 
 # Create your tests here.
 class JsonParserTestCase(TestCase):
 
     def test_output(self):
-        print(json_parser("{}"))
+        print("This is the output: ", parse("{}"))
 
     def test_json_parser_step1_invalid(self):
         file = "json_parser/tests/step1/invalid.json"
-        self.assertEqual(json_parser(file), "Invalid JSON")
+        with open(file, "r") as f:
+            json_string = f.read()
+        self.assertEqual(parse(json_string), "Invalid JSON")
 
     def test_json_parser_step1_valid(self):
         file = "json_parser/tests/step1/valid.json"
-        self.assertEqual(json_parser(file), {})
+        with open(file, "r") as f:
+            json_string = f.read()
+        self.assertEqual(parse(json_string), {})
 
     """ def test_json_parser_step2_invalid(self):
         file = "json_parser/tests/step2/invalid.json"

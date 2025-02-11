@@ -1,5 +1,5 @@
 from enum import StrEnum, auto
-from typing import Any
+from typing import Any, List
 
 class TokenType(StrEnum): 
     STRING = auto()
@@ -18,20 +18,26 @@ class Token:
     def __init__(self, token_type: TokenType, value: Any):
         self.token_type = token_type
         self.value = value
+    
+    def __str__(self):
+        return f"{self.token_type}: {self.value}"
+    
+    def __repr__(self):
+        return self.__str__()
 
 class Scanner:
     def __init__(self, json_string: str):
         self.json_string = json_string
         self.start = 0
         self.current_position = 0
-        self.tokens = []
+        self.tokens: List[Token] = []
         self.line = 1
 
     def scan_tokens(self) -> list[Token]:
         while not self.is_at_end():
             self.start = self.current_position
             self.scan_token()
-            self.tokens.append(Token(TokenType.EOF))
+        self.tokens.append(Token(TokenType.EOF, None))
         return self.tokens
 
     def is_at_end(self) -> bool:
@@ -46,6 +52,8 @@ class Scanner:
                 self.tokens.append(Token(TokenType.RBRACE, char))
             case ' ':
                 pass
+            case _:
+                raise Exception(f"Unexpected character: {char}")
 
              
     def advance(self) -> str:

@@ -1,2 +1,2 @@
-from .json_parser import json_parser
-from .scanner import Scanner
+from .json_parser import parse
+from .scanner import Scanner, Token, TokenType
