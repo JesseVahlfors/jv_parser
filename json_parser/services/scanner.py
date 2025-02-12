@@ -38,6 +38,7 @@ class Scanner:
             self.start = self.current_position
             self.scan_token()
         self.tokens.append(Token(TokenType.EOF, None))
+        self.current_position = 0
         return self.tokens
 
     def is_at_end(self) -> bool:

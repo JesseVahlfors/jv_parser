@@ -8,7 +8,7 @@ JSONArray = List[JSONValue]
 
 def parse(json_string: str) -> JSONValue:
     if not isinstance(json_string, str):
-        raise ValueError("Input must be a valid JSON string")
+        raise ValueError("Invalid JSON: Input must be a valid JSON string")
     
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
@@ -41,8 +41,9 @@ def parse(json_string: str) -> JSONValue:
             return error(scanner.tokens[scanner.current_position], f"Expected {token_type}")
 
     def error(token: Token, message: str) -> None:
-        if token is None:
-            raise Exception(f"Error at line {scanner.line}: {message}")
+        if token is None or token.token_type == TokenType.EOF:
+            return f"Invalid JSON: Unexpected end of input."
+        return f"Invalid JSON: {message} at line {scanner.line}, token type: {token.token_type}."
 
     def parse_value(scanner: Scanner) -> JSONValue:
         if scanner.current_position >= len(scanner.tokens):
@@ -52,9 +53,13 @@ def parse(json_string: str) -> JSONValue:
             case TokenType.LBRACE:
                 return parse_object(scanner)
             case _:
-                return error(token, "Invalid JSON")
-
-    return parse_value(scanner)
+                return error(token, f"Unexpected input at line {scanner.line}.")
+            
+    result = parse_value(scanner)
+    if isinstance(result, str) and result.startswith("Invalid JSON"):
+        return result
+            
+    return result
 
     
     
