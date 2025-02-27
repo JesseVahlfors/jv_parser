@@ -28,7 +28,7 @@ def parse(json_string: str) -> JSONValue:
                 consume(scanner, TokenType.COMMA)
         consume(scanner, TokenType.RBRACE)
         return obj
-
+    
 
     def consume(scanner: Scanner, token_type: TokenType) -> Token:
         if scanner.current_position >= len(scanner.tokens):
@@ -52,6 +52,8 @@ def parse(json_string: str) -> JSONValue:
         match token.token_type:
             case TokenType.LBRACE:
                 return parse_object(scanner)
+            case TokenType.STRING:
+                return consume(scanner, TokenType.STRING).value
             case _:
                 return error(token, f"Unexpected input at line {scanner.line}.")
             

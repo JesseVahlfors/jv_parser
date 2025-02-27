@@ -39,6 +39,7 @@ class Scanner:
             self.scan_token()
         self.tokens.append(Token(TokenType.EOF, None))
         self.current_position = 0
+        print(self.tokens)
         return self.tokens
 
     def is_at_end(self) -> bool:
@@ -51,6 +52,12 @@ class Scanner:
                 self.tokens.append(Token(TokenType.LBRACE, char))
             case '}':
                 self.tokens.append(Token(TokenType.RBRACE, char))
+            case ':':
+                self.tokens.append(Token(TokenType.COLON, char))
+            case ' ' | '\n' | '\r' | '\t':
+                pass
+            case '"':
+                self.add_string()
             case ' ':
                 pass
             case _:
@@ -62,7 +69,12 @@ class Scanner:
         self.current_position += 1
         return char
     
-    #def add_string(self):
+    def add_string(self):
+        value = ""
+        while not self.is_at_end() and self.peek() != '"':
+            value += self.advance()
+        self.advance() # consume closing quote
+        self.tokens.append(Token(TokenType.STRING, value))
      
 
     #def add_number(self):
@@ -71,7 +83,7 @@ class Scanner:
     #def add_keyword(self):
         
 
-    #def get_char(self) -> str:
-       
-
-    #def get_next_char(self) -> str:
+    def peek(self) -> str:
+        if self.is_at_end():
+            return "\0" # return null character
+        return self.json_string[self.current_position]
