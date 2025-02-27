@@ -26,6 +26,9 @@ def parse(json_string: str) -> JSONValue:
             obj[key] = value
             if scanner.tokens[scanner.current_position].token_type == TokenType.COMMA:
                 consume(scanner, TokenType.COMMA)
+
+                if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACE:
+                    return error(scanner.tokens[scanner.current_position], "Unexpected trailing comma")
         consume(scanner, TokenType.RBRACE)
         return obj
     

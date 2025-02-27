@@ -39,7 +39,6 @@ class Scanner:
             self.scan_token()
         self.tokens.append(Token(TokenType.EOF, None))
         self.current_position = 0
-        print(self.tokens)
         return self.tokens
 
     def is_at_end(self) -> bool:
@@ -58,10 +57,12 @@ class Scanner:
                 pass
             case '"':
                 self.add_string()
+            case ',':
+                self.tokens.append(Token(TokenType.COMMA, char))
             case ' ':
                 pass
             case _:
-                raise Exception(f"Unexpected character: {char}")
+                raise Exception(f"Unexpected character: {char}.")
 
              
     def advance(self) -> str:
