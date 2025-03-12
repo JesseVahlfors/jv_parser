@@ -42,3 +42,17 @@ class JsonParserTestCase(TestCase):
         file = "json_parser/tests/step2/valid2.json"
         json_string = self.read_file(file)
         self.assertEqual(parse(json_string), {"key": "value", "key2": "value"})
+
+    def test_json_parser_step3_invalid(self):
+        file = "json_parser/tests/step3/invalid.json"
+        json_string = self.read_file(file)
+        self.assertEqual(parse(json_string), "Invalid JSON: Unexpected trailing comma at line 2, token type: rbrace.")
+
+    def test_json_parser_step3_valid(self):
+        file = "json_parser/tests/step3/valid.json"
+        json_string = self.read_file(file)
+        self.assertEqual(parse(json_string), { "key1": True,
+                                              "key2": False,
+                                              "key3": None,
+                                              "key4": "value",
+                                              "key5": 101})
