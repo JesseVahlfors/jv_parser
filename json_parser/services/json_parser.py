@@ -12,7 +12,6 @@ def parse(json_string: str) -> JSONValue:
     
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
-
     def parse_object(scanner: Scanner) -> JSONObject:
         obj = {}
         consume(scanner, TokenType.LBRACE)
@@ -31,6 +30,8 @@ def parse(json_string: str) -> JSONValue:
                     return error(scanner.tokens[scanner.current_position], "Unexpected trailing comma")
         consume(scanner, TokenType.RBRACE)
         return obj
+    
+    #def parse_array(scanner: Scanner) -> JSONArray:
     
 
     def consume(scanner: Scanner, token_type: TokenType) -> Token:
@@ -57,6 +58,17 @@ def parse(json_string: str) -> JSONValue:
                 return parse_object(scanner)
             case TokenType.STRING:
                 return consume(scanner, TokenType.STRING).value
+            case TokenType.NUMBER:
+                num = consume(scanner, TokenType.NUMBER).value
+                if "." not in num and "e" not in num:
+                    return int(num)
+                else:
+                    return float(num)
+            case TokenType.BOOLEAN:
+                return consume(scanner, TokenType.BOOLEAN).value
+            case TokenType.NULL:
+                return consume(scanner, TokenType.NULL).value
+            #case TokenType.LBRACKET:
             case _:
                 return error(token, f"Unexpected input at line {scanner.line}.")
             

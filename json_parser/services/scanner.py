@@ -62,7 +62,12 @@ class Scanner:
             case ' ':
                 pass
             case _:
-                raise Exception(f"Unexpected character: {char}.")
+                if char.isdigit():
+                    self.add_number()
+                elif char.isalpha():
+                    self.add_keyword()
+                else:
+                    raise Exception(f"Unexpected character: {char}.")
 
              
     def advance(self) -> str:
@@ -78,10 +83,25 @@ class Scanner:
         self.tokens.append(Token(TokenType.STRING, value))
      
 
-    #def add_number(self):
+    def add_number(self):
+        value = self.json_string[self.start]
+        while not self.is_at_end() and self.peek().isdigit():
+            value += self.advance()
+        self.tokens.append(Token(TokenType.NUMBER, value))
        
     
-    #def add_keyword(self):
+    def add_keyword(self):
+        value = self.json_string[self.start]
+        while not self.is_at_end() and self.peek().isalnum():
+            value += self.advance()
+        if value == "true" or value == "false":
+            value = True if value == "true" else False
+            self.tokens.append(Token(TokenType.BOOLEAN, value))
+        elif value == "null":
+            value = None
+            self.tokens.append(Token(TokenType.NULL, value))
+        else:
+            raise Exception(f"Unexpected keyword: {value}.")
         
 
     def peek(self) -> str:
