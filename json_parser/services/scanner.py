@@ -51,6 +51,10 @@ class Scanner:
                 self.tokens.append(Token(TokenType.LBRACE, char))
             case '}':
                 self.tokens.append(Token(TokenType.RBRACE, char))
+            case '[':
+                self.tokens.append(Token(TokenType.LBRACKET, char))
+            case ']':
+                self.tokens.append(Token(TokenType.RBRACKET, char))
             case ':':
                 self.tokens.append(Token(TokenType.COLON, char))
             case ' ' | '\n' | '\r' | '\t':
@@ -84,14 +88,29 @@ class Scanner:
      
 
     def add_number(self):
-        value = self.json_string[self.start]
-        while not self.is_at_end() and self.peek().isdigit():
+        value = self.json_string[self.current_position - 1] # start with the first digit
+
+        if self.peek() == '-':
             value += self.advance()
+
+        while not self.is_at_end() and self.peek().isdigit():
+                value += self.advance()
+        
+        if not self.is_at_end() and self.peek() == '.':
+            value += self.advance()
+            while not self.is_at_end() and self.peek().isdigit():
+                value += self.advance()
+
+        if not self.is_at_end() and self.peek() in ('e', 'E'):
+            value += self.advance()
+            if not self.is_at_end() and self.peek() in ('+', '-'):
+                value += self.advance()
+
         self.tokens.append(Token(TokenType.NUMBER, value))
        
     
     def add_keyword(self):
-        value = self.json_string[self.start]
+        value = self.json_string[self.current_position - 1] # start with the first character
         while not self.is_at_end() and self.peek().isalnum():
             value += self.advance()
         if value == "true" or value == "false":

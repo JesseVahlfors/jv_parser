@@ -9,9 +9,12 @@ JSONArray = List[JSONValue]
 def parse(json_string: str) -> JSONValue:
     if not isinstance(json_string, str):
         raise ValueError("Invalid JSON: Input must be a valid JSON string")
+    if not json_string:
+        raise ValueError("Invalid JSON: Input must be a valid JSON string")
     
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
+
     def parse_object(scanner: Scanner) -> JSONObject:
         obj = {}
         consume(scanner, TokenType.LBRACE)
@@ -23,16 +26,36 @@ def parse(json_string: str) -> JSONValue:
             consume(scanner, TokenType.COLON)
             value = parse_value(scanner)
             obj[key] = value
-            if scanner.tokens[scanner.current_position].token_type == TokenType.COMMA:
-                consume(scanner, TokenType.COMMA)
 
+            next_token = scanner.tokens[scanner.current_position].token_type
+
+            if next_token == TokenType.COMMA:
+                consume(scanner, TokenType.COMMA)
                 if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACE:
                     return error(scanner.tokens[scanner.current_position], "Unexpected trailing comma")
+            elif next_token == TokenType.RBRACE:
+                break
+            else:
+                return error(scanner.tokens[scanner.current_position], "Expected ',' or '}', but found something else.")
+           
         consume(scanner, TokenType.RBRACE)
         return obj
     
-    #def parse_array(scanner: Scanner) -> JSONArray:
-    
+    def parse_array(scanner: Scanner) -> JSONArray:
+        arr = []
+        consume(scanner, TokenType.LBRACKET)
+        if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACKET:
+            consume(scanner, TokenType.RBRACKET)
+            return arr
+        while scanner.tokens[scanner.current_position].token_type != TokenType.RBRACKET:
+            value = parse_value(scanner)
+            arr.append(value)
+            if scanner.tokens[scanner.current_position].token_type == TokenType.COMMA:
+                consume(scanner, TokenType.COMMA)
+                if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACKET:
+                    return error(scanner.tokens[scanner.current_position], "Unexpected trailing comma")
+        consume(scanner, TokenType.RBRACKET)
+        return arr
 
     def consume(scanner: Scanner, token_type: TokenType) -> Token:
         if scanner.current_position >= len(scanner.tokens):
@@ -46,8 +69,8 @@ def parse(json_string: str) -> JSONValue:
 
     def error(token: Token, message: str) -> None:
         if token is None or token.token_type == TokenType.EOF:
-            return f"Invalid JSON: Unexpected end of input."
-        return f"Invalid JSON: {message} at line {scanner.line}, token type: {token.token_type}."
+            raise Exception("Invalid JSON: Unexpected end of input.")
+        raise Exception(f"Invalid JSON: {message} at line {scanner.line}, token type: {token.token_type}.")
 
     def parse_value(scanner: Scanner) -> JSONValue:
         if scanner.current_position >= len(scanner.tokens):
@@ -68,7 +91,8 @@ def parse(json_string: str) -> JSONValue:
                 return consume(scanner, TokenType.BOOLEAN).value
             case TokenType.NULL:
                 return consume(scanner, TokenType.NULL).value
-            #case TokenType.LBRACKET:
+            case TokenType.LBRACKET:
+                return parse_array(scanner)
             case _:
                 return error(token, f"Unexpected input at line {scanner.line}.")
             
