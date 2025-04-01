@@ -75,6 +75,12 @@ def parse(json_string: str) -> JSONValue:
     def parse_value(scanner: Scanner) -> JSONValue:
         if scanner.current_position >= len(scanner.tokens):
             return error(None, "Unexpected end of input")
+        
+        if scanner.current_position == 0:
+            token = scanner.tokens[scanner.current_position]
+            if token.token_type not in {TokenType.LBRACE, TokenType.LBRACKET}:
+                return error(token, "JSON must start with an object or array.")
+            
         token = scanner.tokens[scanner.current_position]
         match token.token_type:
             case TokenType.LBRACE:

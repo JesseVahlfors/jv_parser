@@ -1,16 +1,25 @@
 from django.test import TestCase
 from json_parser.services.json_parser import parse
+import os
+import json
+from pathlib import Path
 
 # Create your tests here.
 class JsonParserTestCase(TestCase):
 
-    def test_output(self):
-        print("This is the output: ", parse('{"name": "John", "sex": "male", "boolean": true, "null": null, "age": 30, "height": 1.75, "array": [1, 2, 3], "object": {"key": "value"}}'))
+    #def test_output(self):
+        #print("This is the output: ", parse('{"name": "John", "sex": "male", "boolean": true, "null": null, "age": 30, "height": 1.75, "array": [1, 2, 3], "object": {"key": "value"}}'))
 
     def test_empty_input(self):
         with self.assertRaises(ValueError) as context:
             parse("")
         self.assertEqual(str(context.exception), "Invalid JSON: Input must be a valid JSON string")
+
+    def test_only_string_input(self):
+        print("Testing only string input", parse("string"))
+        with self.assertRaises(Exception) as context:
+            parse("string")
+        self.assertTrue("Invalid JSON:" in str(context.exception))
 
     def test_whitespace_only_input(self):
         with self.assertRaises(Exception) as context:
@@ -122,4 +131,28 @@ class JsonParserTestCase(TestCase):
                                                 "inner key": "inner value"
                                             },
                                             "key-l": ["list value"]
-                                            })    
+                                            })
+
+    #json.org test cases
+    def test_json_parser_json_org_test_cases(self):
+        TEST_DIR = Path("json_parser/tests/json.org_tests/test").resolve()
+        print(f"Test directory: {TEST_DIR}")
+
+        for filename in os.listdir(TEST_DIR):
+            if filename.endswith(".json"):
+                file_path = TEST_DIR / filename
+                with open(file_path, 'r', encoding="utf-8") as file:
+                    json_string = file.read()
+
+                print(f"Testing {filename}...")
+                    
+                if "fail" in filename:
+                    with self.assertRaises(Exception):
+                        parse(json_string)
+                else:
+                    expected = json.loads(json_string)
+                    result = parse(json_string)
+                    self.assertEqual(result, expected)
+                   
+
+ 
