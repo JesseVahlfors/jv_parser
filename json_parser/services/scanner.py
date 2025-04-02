@@ -63,8 +63,10 @@ class Scanner:
                 self.tokens.append(Token(TokenType.RBRACKET, char))
             case ':':
                 self.tokens.append(Token(TokenType.COLON, char))
-            case ' ' | '\n' | '\r' | '\t':
+            case ' ' | '\r' | '\t':
                 pass
+            case '\n':
+                self.line += 1
             case '"':
                 self.add_string()
             case ',':
@@ -72,12 +74,12 @@ class Scanner:
             case ' ':
                 pass
             case _:
-                if char.isdigit():
+                if char.isdigit() or char == '-':
                     self.add_number()
                 elif char.isalpha():
                     self.add_keyword()
                 else:
-                    raise Exception(f"Unexpected character: {char}.")
+                    raise Exception(f"Unexpected character: {char} at line {self.line}.")
 
              
     def advance(self) -> str:
@@ -94,7 +96,7 @@ class Scanner:
                     raise Exception("Invalid JSON: Unexpected end of input in string.")
                 escape_char = self.advance()
                 if escape_char not in ('"', '\\', '/', 'b', 'f', 'n', 'r', 't'):
-                    raise Exception(f"Invalid JSON: Illegal backslash escape {escape_char}.")
+                    raise Exception(f"Invalid JSON: Illegal backslash escape {escape_char} at line {self.line}.")
                 if escape_char == 'u':
                     hex_digits = ""
                     for _ in range(4):
@@ -118,7 +120,14 @@ class Scanner:
                     }
                     value += escape_map[escape_char]
             else:
-                value += self.advance()
+                char = self.advance()
+
+                if ord(char) < 0x20:
+                    raise Exception(f"Invalid JSON: Control character at line {self.line}.")
+                
+                value += char
+
+
         if self.is_at_end():
             raise Exception("Invalid JSON: Unexpected end of input in string.")
             
@@ -162,7 +171,7 @@ class Scanner:
             value = None
             self.tokens.append(Token(TokenType.NULL, value))
         else:
-            raise Exception(f"Unexpected keyword: {value}. Keywords must be 'true', 'false', or 'null'.")
+            raise Exception(f"Unexpected keyword: {value} at line {self.line}. Keywords must be 'true', 'false', or 'null'.")
         
 
     def peek(self) -> str:

@@ -41,7 +41,7 @@ class JsonParserTestCase(TestCase):
         json_string = '{"key1": "value1" "key2": "value2"}'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Expected ',' or '}', but found something else. at line 1, token type: string." in str(context.exception))
+        self.assertTrue("Invalid JSON: Expected ',' or '}', but found something else. at line 1 and index 4, token type: string." in str(context.exception))
 
     def test_extra_characters(self):
         json_string = '{"object": "value"} "extra value"'
@@ -59,7 +59,31 @@ class JsonParserTestCase(TestCase):
         json_string = r'["Illegal backslash escape: \x15"]'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Invalid JSON: Illegal backslash escape x." in str(context.exception))
+        self.assertTrue("Invalid JSON: Illegal backslash escape x at line 1." in str(context.exception))
+
+    def test_deeply_nested_arrays(self):
+        json_string = '[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]'
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Maximum depth exceeded. Maximum depth is 20. at line 1 and index 11, token type: lbracket" in str(context.exception))
+    
+    def test_deeply_nested_objects(self):
+        json_string = '{"a":' * 21 + 'null' + '}' * 21
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Maximum depth exceeded" in str(context.exception))
+    
+    def test_deeply_nested_combination(self):
+        json_string = '{"a": [' * 10 + '{"b": [' * 10 + '"value"' + ']}' * 10 + ']' * 10
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Maximum depth exceeded" in str(context.exception))
+
+    def test_tab_character_in_string(self):
+        json_string = r'["	tab	character	in	string	"]'
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Control character at line 1." in str(context.exception))
 
     # Test cases for Coding challenges test json
     def read_file(self, file):
@@ -96,7 +120,7 @@ class JsonParserTestCase(TestCase):
         json_string = self.read_file(file)
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Unexpected keyword: key2." in str(context.exception))
+        self.assertTrue("Unexpected keyword: key2 at line 3." in str(context.exception))
 
     def test_json_parser_step2_valid2(self):
         file = "json_parser/tests/step2/valid2.json"
@@ -108,7 +132,7 @@ class JsonParserTestCase(TestCase):
         json_string = self.read_file(file)
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Unexpected keyword: False." in str(context.exception))
+        self.assertTrue("Unexpected keyword: False at line 3. Keywords must be 'true', 'false', or 'null'" in str(context.exception))
 
     def test_json_parser_step3_valid(self):
         file = "json_parser/tests/step3/valid.json"
@@ -126,7 +150,7 @@ class JsonParserTestCase(TestCase):
         json_string = self.read_file(file)
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Unexpected character: '." in str(context.exception))
+        self.assertTrue("Unexpected character: ' at line 7." in str(context.exception))
 
     def test_json_parser_step4_valid(self):
         file = "json_parser/tests/step4/valid.json"
