@@ -34,6 +34,11 @@ class Scanner:
         self.line = 1
 
     def scan_tokens(self) -> list[Token]:
+        if not self.is_at_end():
+            first_char = self.json_string[0]
+            if first_char != '{' and first_char != '[':
+                raise Exception("Invalid JSON: JSON must start with an object or array.")
+            
         while not self.is_at_end():
             self.start = self.current_position
             self.scan_token()
@@ -120,7 +125,7 @@ class Scanner:
             value = None
             self.tokens.append(Token(TokenType.NULL, value))
         else:
-            raise Exception(f"Unexpected keyword: {value}.")
+            raise Exception(f"Unexpected keyword: {value}. Keywords must be 'true', 'false', or 'null'.")
         
 
     def peek(self) -> str:

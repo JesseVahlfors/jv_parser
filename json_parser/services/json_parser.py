@@ -8,9 +8,9 @@ JSONArray = List[JSONValue]
 
 def parse(json_string: str) -> JSONValue:
     if not isinstance(json_string, str):
-        raise ValueError("Invalid JSON: Input must be a valid JSON string")
+        raise Exception("Invalid JSON: Input must be a valid JSON string")
     if not json_string:
-        raise ValueError("Invalid JSON: Input must be a valid JSON string")
+        raise Exception("Invalid JSON: Input must be a valid JSON string")
     
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
@@ -75,12 +75,7 @@ def parse(json_string: str) -> JSONValue:
     def parse_value(scanner: Scanner) -> JSONValue:
         if scanner.current_position >= len(scanner.tokens):
             return error(None, "Unexpected end of input")
-        
-        if scanner.current_position == 0:
-            token = scanner.tokens[scanner.current_position]
-            if token.token_type not in {TokenType.LBRACE, TokenType.LBRACKET}:
-                return error(token, "JSON must start with an object or array.")
-            
+               
         token = scanner.tokens[scanner.current_position]
         match token.token_type:
             case TokenType.LBRACE:

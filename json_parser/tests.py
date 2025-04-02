@@ -11,20 +11,19 @@ class JsonParserTestCase(TestCase):
         #print("This is the output: ", parse('{"name": "John", "sex": "male", "boolean": true, "null": null, "age": 30, "height": 1.75, "array": [1, 2, 3], "object": {"key": "value"}}'))
 
     def test_empty_input(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(Exception) as context:
             parse("")
         self.assertEqual(str(context.exception), "Invalid JSON: Input must be a valid JSON string")
 
     def test_only_string_input(self):
-        print("Testing only string input", parse("string"))
         with self.assertRaises(Exception) as context:
             parse("string")
-        self.assertTrue("Invalid JSON:" in str(context.exception))
+        self.assertTrue("Invalid JSON: JSON must start with an object or array." in str(context.exception))
 
     def test_whitespace_only_input(self):
         with self.assertRaises(Exception) as context:
             parse("   ")
-        self.assertTrue("Unexpected end of input" in str(context.exception))
+        self.assertTrue("Invalid JSON: JSON must start with an object or array." in str(context.exception))
 
     def test_nested_objects(self):
         json_string = '{"a": {"b": {"c": {"d": {"e": "value"}}}}}'
@@ -44,6 +43,13 @@ class JsonParserTestCase(TestCase):
             parse(json_string)
         self.assertTrue("Expected ',' or '}', but found something else. at line 1, token type: string." in str(context.exception))
 
+    def test_extra_characters(self):
+        json_string = '{"object"} "extra value"'
+        print("Testing extra characters", parse(json_string))
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Extra value after close" in str(context.exception))
+
     # Test cases for Coding challenges test json
     def read_file(self, file):
         with open(file, "r") as f:
@@ -52,7 +58,7 @@ class JsonParserTestCase(TestCase):
     def test_json_parser_step1_invalid(self):
         file = "json_parser/tests/step1/invalid.json"
         json_string = self.read_file(file)
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(Exception) as context:
             parse(json_string)
         self.assertEqual(str(context.exception), "Invalid JSON: Input must be a valid JSON string")
 
