@@ -15,6 +15,7 @@ def parse(json_string: str) -> JSONValue:
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
 
+
     def parse_object(scanner: Scanner) -> JSONObject:
         obj = {}
         consume(scanner, TokenType.LBRACE)
@@ -98,6 +99,11 @@ def parse(json_string: str) -> JSONValue:
                 return error(token, f"Unexpected input at line {scanner.line}.")
             
     result = parse_value(scanner)
+
+    if scanner.current_position < len(scanner.tokens) - 1: #check for extra tokens after main object/array closed
+        extra_token = scanner.tokens[scanner.current_position]
+        raise Exception(f"Invalid JSON: Extra value after close at line {scanner.line}, token type: {extra_token.token_type}.")
+    
     if isinstance(result, str) and result.startswith("Invalid JSON"):
         return result
             

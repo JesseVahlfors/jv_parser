@@ -44,11 +44,22 @@ class JsonParserTestCase(TestCase):
         self.assertTrue("Expected ',' or '}', but found something else. at line 1, token type: string." in str(context.exception))
 
     def test_extra_characters(self):
-        json_string = '{"object"} "extra value"'
-        print("Testing extra characters", parse(json_string))
+        json_string = '{"object": "value"} "extra value"'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Invalid JSON: Extra value after close" in str(context.exception))
+        self.assertTrue("Invalid JSON: Extra value after close at line 1, token type: string." in str(context.exception))
+
+    def test_numbers_for_leading_zeros(self):
+        json_string = '{"Numbers cannot have leading zeroes": 013}'
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Leading zeros in number." in str(context.exception))
+
+    def test_illegal_backslash(self):
+        json_string = r'["Illegal backslash escape: \x15"]'
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Illegal backslash escape x." in str(context.exception))
 
     # Test cases for Coding challenges test json
     def read_file(self, file):

@@ -34,7 +34,8 @@ class Scanner:
         self.line = 1
 
     def scan_tokens(self) -> list[Token]:
-        if not self.is_at_end():
+        # Check that the string starts with a object or array
+        if not self.is_at_end(): 
             first_char = self.json_string[0]
             if first_char != '{' and first_char != '[':
                 raise Exception("Invalid JSON: JSON must start with an object or array.")
@@ -87,16 +88,52 @@ class Scanner:
     def add_string(self):
         value = ""
         while not self.is_at_end() and self.peek() != '"':
-            value += self.advance()
+            if self.peek() == '\\':
+                self.advance()
+                if self.is_at_end():
+                    raise Exception("Invalid JSON: Unexpected end of input in string.")
+                escape_char = self.advance()
+                if escape_char not in ('"', '\\', '/', 'b', 'f', 'n', 'r', 't'):
+                    raise Exception(f"Invalid JSON: Illegal backslash escape {escape_char}.")
+                if escape_char == 'u':
+                    hex_digits = ""
+                    for _ in range(4):
+                        if self.is_at_end() or not self.peek().isalnum():
+                            raise Exception("Invalid JSON: Invalid unicode escape sequence.")
+                        hex_digits += self.advance()
+                    try:
+                        value += chr(int(hex_digits, 16))
+                    except ValueError:
+                        raise Exception("Invalid JSON: Invalid unicode escape sequence.")
+                else:
+                    escape_map = {
+                        '"': '"',
+                        '\\': '\\',
+                        '/': '/',
+                        'b': '\b',
+                        'f': '\f',
+                        'n': '\n',
+                        'r': '\r',
+                        't': '\t'
+                    }
+                    value += escape_map[escape_char]
+            else:
+                value += self.advance()
+        if self.is_at_end():
+            raise Exception("Invalid JSON: Unexpected end of input in string.")
+            
         self.advance() # consume closing quote
         self.tokens.append(Token(TokenType.STRING, value))
      
-
     def add_number(self):
         value = self.json_string[self.current_position - 1] # start with the first digit
-
+        if value == '0' and not self.is_at_end() and self.peek().isdigit():
+            raise Exception("Invalid JSON: Leading zeros in number.")
+        
         if self.peek() == '-':
             value += self.advance()
+            if self.peek() == '0':
+                raise Exception("Invalid JSON: Leading zeros in number.")
 
         while not self.is_at_end() and self.peek().isdigit():
                 value += self.advance()
