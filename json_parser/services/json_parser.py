@@ -16,7 +16,8 @@ def parse(json_string: str) -> JSONValue:
     tokens = scanner.scan_tokens()
 
 
-    def parse_object(scanner: Scanner, depth=0) -> JSONObject:
+    def parse_object(scanner: Scanner) -> JSONObject:
+        scanner.increase_depth()
         obj = {}
         consume(scanner, TokenType.LBRACE)
         if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACE:
@@ -25,7 +26,7 @@ def parse(json_string: str) -> JSONValue:
         while scanner.tokens[scanner.current_position].token_type != TokenType.RBRACE:
             key = consume(scanner, TokenType.STRING).value
             consume(scanner, TokenType.COLON)
-            value = parse_value(scanner, depth + 1)
+            value = parse_value(scanner)
             obj[key] = value
 
             next_token = scanner.tokens[scanner.current_position].token_type
@@ -40,22 +41,25 @@ def parse(json_string: str) -> JSONValue:
                 return error(scanner.tokens[scanner.current_position], "Expected ',' or '}', but found something else.")
            
         consume(scanner, TokenType.RBRACE)
+        scanner.decrease_depth()
         return obj
     
-    def parse_array(scanner: Scanner, depth=0) -> JSONArray:
+    def parse_array(scanner: Scanner) -> JSONArray:
+        scanner.increase_depth()
         arr = []
         consume(scanner, TokenType.LBRACKET)
         if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACKET:
             consume(scanner, TokenType.RBRACKET)
             return arr
         while scanner.tokens[scanner.current_position].token_type != TokenType.RBRACKET:
-            value = parse_value(scanner, depth + 1)
+            value = parse_value(scanner)
             arr.append(value)
             if scanner.tokens[scanner.current_position].token_type == TokenType.COMMA:
                 consume(scanner, TokenType.COMMA)
                 if scanner.tokens[scanner.current_position].token_type == TokenType.RBRACKET:
                     return error(scanner.tokens[scanner.current_position], "Unexpected trailing comma")
         consume(scanner, TokenType.RBRACKET)
+        scanner.decrease_depth()
         return arr
 
     def consume(scanner: Scanner, token_type: TokenType) -> Token:
@@ -73,27 +77,24 @@ def parse(json_string: str) -> JSONValue:
             raise Exception("Invalid JSON: Unexpected end of input.")
         raise Exception(f"Invalid JSON: {message} at line {scanner.line} and index {scanner.current_position}, token type: {token.token_type}.")
     
-    MAX_DEPTH = 20  # Maximum depth for nested structures
 
-    def parse_value(scanner: Scanner, depth=0) -> JSONValue:
+    def parse_value(scanner: Scanner) -> JSONValue:
         if scanner.current_position >= len(scanner.tokens):
             return error(None, "Unexpected end of input")
-        if scanner.tokens[scanner.current_position].token_type in {TokenType.LBRACKET, TokenType.LBRACE}:
-            if depth > MAX_DEPTH:
-                return error(scanner.tokens[scanner.current_position], "Maximum depth exceeded. Maximum depth is 20.")
-               
+        
         token = scanner.tokens[scanner.current_position]
         match token.token_type:
             case TokenType.LBRACE:
-                return parse_object(scanner, depth + 1)
+                return parse_object(scanner)
             case TokenType.LBRACKET:
-                return parse_array(scanner, depth + 1)
+                return parse_array(scanner)
             case TokenType.STRING:
                 return consume(scanner, TokenType.STRING).value
             case TokenType.NUMBER:
                 num = consume(scanner, TokenType.NUMBER).value
-                if "." not in num and "e" not in num:
+                if "." not in num and "e" not in num and "E" not in num:
                     return int(num)
+                
                 else:
                     return float(num)
             case TokenType.BOOLEAN:

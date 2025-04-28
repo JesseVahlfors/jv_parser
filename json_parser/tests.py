@@ -53,7 +53,7 @@ class JsonParserTestCase(TestCase):
         json_string = '{"Numbers cannot have leading zeroes": 013}'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Invalid JSON: Leading zeros in number." in str(context.exception))
+        self.assertTrue("Invalid JSON: Leading zeros in number at line 1." in str(context.exception))
 
     def test_illegal_backslash(self):
         json_string = r'["Illegal backslash escape: \x15"]'
@@ -65,7 +65,7 @@ class JsonParserTestCase(TestCase):
         json_string = '[[[[[[[[[[[[[[[[[[[["Too deep"]]]]]]]]]]]]]]]]]]]]'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Invalid JSON: Maximum depth exceeded. Maximum depth is 20. at line 1 and index 11, token type: lbracket" in str(context.exception))
+        self.assertTrue("Maximum depth exceeded. Maximum depth is 20. Current depth is at 20 at line 1 and index 19, token type: lbracket" in str(context.exception))
     
     def test_deeply_nested_objects(self):
         json_string = '{"a":' * 21 + 'null' + '}' * 21
@@ -84,6 +84,10 @@ class JsonParserTestCase(TestCase):
         with self.assertRaises(Exception) as context:
             parse(json_string)
         self.assertTrue("Invalid JSON: Control character at line 1." in str(context.exception))
+
+    def test_exponential_notation(self):
+        json_string = '[1.0e+10, 1e00, 2e+00, 2e-00]'
+        self.assertEqual(parse(json_string), [1.0e+10, 1e00, 2e+00, 2e-00])
 
     # Test cases for Coding challenges test json
     def read_file(self, file):

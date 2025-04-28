@@ -32,7 +32,18 @@ class Scanner:
         self.current_position = 0
         self.tokens: List[Token] = []
         self.line = 1
+        self.current_depth = 0
 
+    def increase_depth(self):
+        self.current_depth += 1
+        if self.current_depth >= 20:
+            raise Exception(f"Maximum depth exceeded. Maximum depth is 20. Current depth is at {self.current_depth} at line {self.line} and index {self.current_position}, token type: {self.tokens[self.current_position].token_type}")
+
+    def decrease_depth(self):
+        self.current_depth -= 1
+        if self.current_depth < 0:
+            raise Exception("Invalid JSON: Depth cannot be negative.")
+        
     def scan_tokens(self) -> list[Token]:
         # Check that the string starts with a object or array
         if not self.is_at_end(): 
@@ -95,7 +106,7 @@ class Scanner:
                 if self.is_at_end():
                     raise Exception("Invalid JSON: Unexpected end of input in string.")
                 escape_char = self.advance()
-                if escape_char not in ('"', '\\', '/', 'b', 'f', 'n', 'r', 't'):
+                if escape_char not in ('"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u'):
                     raise Exception(f"Invalid JSON: Illegal backslash escape {escape_char} at line {self.line}.")
                 if escape_char == 'u':
                     hex_digits = ""
@@ -136,25 +147,33 @@ class Scanner:
      
     def add_number(self):
         value = self.json_string[self.current_position - 1] # start with the first digit
-        if value == '0' and not self.is_at_end() and self.peek().isdigit():
-            raise Exception("Invalid JSON: Leading zeros in number.")
-        
-        if self.peek() == '-':
+
+        if value == '-':
+            if self.is_at_end() or not self.peek().isdigit():
+                raise Exception(f"Invalid JSON: Unexpected character after '-' at line {self.line}.")
             value += self.advance()
-            if self.peek() == '0':
-                raise Exception("Invalid JSON: Leading zeros in number.")
+
+        if value[-1] == '0':
+            if not self.is_at_end() and self.peek().isdigit():
+                raise Exception(f"Invalid JSON: Leading zeros in number at line {self.line}.")
 
         while not self.is_at_end() and self.peek().isdigit():
                 value += self.advance()
         
         if not self.is_at_end() and self.peek() == '.':
             value += self.advance()
+            if self.is_at_end() or not self.peek().isdigit():
+                raise Exception(f"Invalid JSON: Unexpected character after '.' at line {self.line}.")
             while not self.is_at_end() and self.peek().isdigit():
                 value += self.advance()
 
         if not self.is_at_end() and self.peek() in ('e', 'E'):
             value += self.advance()
             if not self.is_at_end() and self.peek() in ('+', '-'):
+                value += self.advance()
+            if self.is_at_end() or not self.peek().isdigit():
+                raise Exception(f"Invalid JSON: Unexpected character after exponent at line {self.line}.")
+            while not self.is_at_end() and self.peek().isdigit():
                 value += self.advance()
 
         self.tokens.append(Token(TokenType.NUMBER, value))
