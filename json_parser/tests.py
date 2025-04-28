@@ -89,6 +89,16 @@ class JsonParserTestCase(TestCase):
         json_string = '[1.0e+10, 1e00, 2e+00, 2e-00]'
         self.assertEqual(parse(json_string), [1.0e+10, 1e00, 2e+00, 2e-00])
 
+    def test_large_flat_array(self):
+        large_json = '[' + ', '.join(str(i) for i in range(100000)) + ']'
+        expected = list(range(100000))
+        self.assertEqual(parse(large_json), expected)
+
+    def test_large_flat_object(self):
+        large_json = '{' + ', '.join(f'"key{i}": {i}' for i in range(100000)) + '}'
+        expected = {f"key{i}": i for i in range(100000)}
+        self.assertEqual(parse(large_json), expected)
+
     # Test cases for Coding challenges test json
     def read_file(self, file):
         with open(file, "r") as f:

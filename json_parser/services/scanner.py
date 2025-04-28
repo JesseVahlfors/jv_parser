@@ -33,10 +33,12 @@ class Scanner:
         self.tokens: List[Token] = []
         self.line = 1
         self.current_depth = 0
+       
 
     def increase_depth(self):
+        MAX_DEPTH = 20
         self.current_depth += 1
-        if self.current_depth >= 20:
+        if self.current_depth >= MAX_DEPTH:
             raise Exception(f"Maximum depth exceeded. Maximum depth is 20. Current depth is at {self.current_depth} at line {self.line} and index {self.current_position}, token type: {self.tokens[self.current_position].token_type}")
 
     def decrease_depth(self):
