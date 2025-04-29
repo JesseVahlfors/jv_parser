@@ -101,7 +101,7 @@ class Scanner:
         return char
     
     def add_string(self):
-        value = ""
+        value = []
         while not self.is_at_end() and self.peek() != '"':
             if self.peek() == '\\':
                 self.advance()
@@ -117,7 +117,7 @@ class Scanner:
                             raise Exception("Invalid JSON: Invalid unicode escape sequence.")
                         hex_digits += self.advance()
                     try:
-                        value += chr(int(hex_digits, 16))
+                        value.append(chr(int(hex_digits, 16)))
                     except ValueError:
                         raise Exception("Invalid JSON: Invalid unicode escape sequence.")
                 else:
@@ -131,54 +131,60 @@ class Scanner:
                         'r': '\r',
                         't': '\t'
                     }
-                    value += escape_map[escape_char]
+                    value.append(escape_map[escape_char])
             else:
                 char = self.advance()
 
                 if ord(char) < 0x20:
                     raise Exception(f"Invalid JSON: Control character at line {self.line}.")
                 
-                value += char
+                value.append(char)
 
 
         if self.is_at_end():
             raise Exception("Invalid JSON: Unexpected end of input in string.")
             
         self.advance() # consume closing quote
-        self.tokens.append(Token(TokenType.STRING, value))
+        self.tokens.append(Token(TokenType.STRING, ''.join(value)))
      
     def add_number(self):
-        value = self.json_string[self.current_position - 1] # start with the first digit
+        value = []
+        value.append(self.json_string[self.current_position - 1]) # starting with the first digit
 
-        if value == '-':
+        # negative sign
+        if value[0] == '-':
             if self.is_at_end() or not self.peek().isdigit():
                 raise Exception(f"Invalid JSON: Unexpected character after '-' at line {self.line}.")
-            value += self.advance()
+            value.append(self.advance())
 
+        # leading zero check
         if value[-1] == '0':
             if not self.is_at_end() and self.peek().isdigit():
                 raise Exception(f"Invalid JSON: Leading zeros in number at line {self.line}.")
 
+        # integer part
         while not self.is_at_end() and self.peek().isdigit():
-                value += self.advance()
+                value.append(self.advance())
         
+        # decimal part
         if not self.is_at_end() and self.peek() == '.':
-            value += self.advance()
+            value.append(self.advance())
             if self.is_at_end() or not self.peek().isdigit():
                 raise Exception(f"Invalid JSON: Unexpected character after '.' at line {self.line}.")
             while not self.is_at_end() and self.peek().isdigit():
-                value += self.advance()
+                value.append(self.advance())
 
+        # exponent part
         if not self.is_at_end() and self.peek() in ('e', 'E'):
-            value += self.advance()
+            value.append(self.advance())
             if not self.is_at_end() and self.peek() in ('+', '-'):
-                value += self.advance()
+                value.append(self.advance())
             if self.is_at_end() or not self.peek().isdigit():
                 raise Exception(f"Invalid JSON: Unexpected character after exponent at line {self.line}.")
             while not self.is_at_end() and self.peek().isdigit():
-                value += self.advance()
+                value.append(self.advance())
 
-        self.tokens.append(Token(TokenType.NUMBER, value))
+        self.tokens.append(Token(TokenType.NUMBER, ''.join(value)))
        
     
     def add_keyword(self):
