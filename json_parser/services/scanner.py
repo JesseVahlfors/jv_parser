@@ -188,15 +188,16 @@ class Scanner:
        
     
     def add_keyword(self):
+        # Get the keyword
         value = self.json_string[self.current_position - 1] # start with the first character
         while not self.is_at_end() and self.peek().isalnum():
             value += self.advance()
-        if value == "true" or value == "false":
-            value = True if value == "true" else False
-            self.tokens.append(Token(TokenType.BOOLEAN, value))
-        elif value == "null":
-            value = None
-            self.tokens.append(Token(TokenType.NULL, value))
+
+        # Check if it is valid
+        keywords = {"true": True, "false": False, "null": None}    
+        if value in keywords:
+            token_type = TokenType.BOOLEAN if value in ("true", "false") else TokenType.NULL
+            self.tokens.append(Token(token_type, keywords[value]))
         else:
             raise Exception(f"Unexpected keyword: {value} at line {self.line}. Keywords must be 'true', 'false', or 'null'.")
         
