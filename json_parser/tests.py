@@ -83,7 +83,7 @@ class JsonParserTestCase(TestCase):
         json_string = r'["	tab	character	in	string	"]'
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertTrue("Invalid JSON: Control character at line 1." in str(context.exception))
+        self.assertTrue("Invalid JSON: Control character '\\t' at line 1." in str(context.exception))
 
     def test_exponential_notation(self):
         json_string = '[1.0e+10, 1e00, 2e+00, 2e-00]'
@@ -98,6 +98,12 @@ class JsonParserTestCase(TestCase):
         large_json = '{' + ', '.join(f'"key{i}": {i}' for i in range(100000)) + '}'
         expected = {f"key{i}": i for i in range(100000)}
         self.assertEqual(parse(large_json), expected)
+
+    def test_control_character_in_string(self):
+        json_string = '["This is a test\u0001string"]'
+        with self.assertRaises(Exception) as context:
+            parse(json_string)
+        self.assertTrue("Invalid JSON: Control character '\\x01' at line 1." in str(context.exception))
 
     # Test cases for Coding challenges test json
     def read_file(self, file):

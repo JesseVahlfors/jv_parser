@@ -136,7 +136,7 @@ class Scanner:
                 char = self.advance()
 
                 if ord(char) < 0x20:
-                    raise Exception(f"Invalid JSON: Control character at line {self.line}.")
+                    raise Exception(f"Invalid JSON: Control character {repr(char)} at line {self.line}.")
                 
                 value.append(char)
 
