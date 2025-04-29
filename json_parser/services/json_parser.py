@@ -9,8 +9,8 @@ JSONArray = List[JSONValue]
 def parse(json_string: str) -> JSONValue:
     if not isinstance(json_string, str):
         raise Exception("Invalid JSON: Input must be a valid JSON string")
-    if not json_string:
-        raise Exception("Invalid JSON: Input must be a valid JSON string")
+    if not json_string.strip():
+        raise Exception("Invalid JSON: Input is empty or contains only whitespace.")
     
     scanner = Scanner(json_string)
     tokens = scanner.scan_tokens()
@@ -74,7 +74,7 @@ def parse(json_string: str) -> JSONValue:
 
     def error(token: Token, message: str) -> None:
         if token is None or token.token_type == TokenType.EOF:
-            raise Exception("Invalid JSON: Unexpected end of input.")
+            raise Exception(f"Invalid JSON: Unexpected end of input at line {scanner.line}.")
         raise Exception(f"Invalid JSON: {message} at line {scanner.line} and index {scanner.current_position}, token type: {token.token_type}.")
     
 
@@ -115,5 +115,5 @@ def parse(json_string: str) -> JSONValue:
             
     return result
 
-    
-    
+
+

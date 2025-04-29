@@ -13,7 +13,7 @@ class JsonParserTestCase(TestCase):
     def test_empty_input(self):
         with self.assertRaises(Exception) as context:
             parse("")
-        self.assertEqual(str(context.exception), "Invalid JSON: Input must be a valid JSON string")
+        self.assertEqual(str(context.exception), "Invalid JSON: Input is empty or contains only whitespace.")
 
     def test_only_string_input(self):
         with self.assertRaises(Exception) as context:
@@ -23,7 +23,7 @@ class JsonParserTestCase(TestCase):
     def test_whitespace_only_input(self):
         with self.assertRaises(Exception) as context:
             parse("   ")
-        self.assertTrue("Invalid JSON: JSON must start with an object or array." in str(context.exception))
+        self.assertTrue("Invalid JSON: Input is empty or contains only whitespace." in str(context.exception))
 
     def test_nested_objects(self):
         json_string = '{"a": {"b": {"c": {"d": {"e": "value"}}}}}'
@@ -109,7 +109,7 @@ class JsonParserTestCase(TestCase):
         json_string = self.read_file(file)
         with self.assertRaises(Exception) as context:
             parse(json_string)
-        self.assertEqual(str(context.exception), "Invalid JSON: Input must be a valid JSON string")
+        self.assertEqual(str(context.exception), "Invalid JSON: Input is empty or contains only whitespace.")
 
     def test_json_parser_step1_valid(self):
         file = "json_parser/tests/step1/valid.json"
